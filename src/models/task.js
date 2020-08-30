@@ -21,6 +21,7 @@ const taskSchema = new mongoose.Schema({
     timestamps: true
 })
 
+// Creating a model for News
 const Task = mongoose.model('Task', taskSchema)
 
 module.exports = Task

@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const Task = require('./task')
 
+// The first thing we need to do is define the model we're working with 
 const userSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -15,7 +16,10 @@ const userSchema = new mongoose.Schema({
         unique: true,
         trim: true,
         required: true,
+        // setting up a custom validator for a field
+          // validate get set equal to a function using ES6 method definition syntax
         validate(value) {
+            // Using validator npm package
             if (!validator.isEmail(value)) {
                 throw new Error('Email is Invalid')
             }
@@ -27,6 +31,7 @@ const userSchema = new mongoose.Schema({
         trim: true,
         minlength: 7,
         validate(value) {
+            // using the includes() method
             if (value.toLowerCase().includes('password')) {
                 throw new Error('Password cannot contain "password"')
             }
@@ -68,8 +73,10 @@ userSchema.methods.toJSON = function () {
 }
 
 userSchema.methods.generateAuthToken = async function () {
-    const user = this
+    const user = this   // allowing us to access the user
 
+// In arguments to sign(), we have to provide an object(a payload) that uniquely identifies the user.and a secret(string).
+    // toString() -- to convert objectId into standard string
     const token = jwt.sign({ _id: user._id.toString() }, process.env.JWT_SECRET)
     user.tokens = user.tokens.concat({ token })
 
@@ -77,6 +84,7 @@ userSchema.methods.generateAuthToken = async function () {
     return token
 }
 
+// Statics are pretty much the same as methods but allow for defining functions that exist directly on your Model.
 userSchema.statics.findByCredentials = async (email, password) => {
 
     const user = await User.findOne({ email: email })
@@ -84,6 +92,7 @@ userSchema.statics.findByCredentials = async (email, password) => {
     if (!user) {
         throw new Error('Unable to Login')
     }
+    // verify the password using the compare function
     const isMatch = await bcrypt.compare(password, user.password)
 
     if (!isMatch) {
@@ -92,15 +101,21 @@ userSchema.statics.findByCredentials = async (email, password) => {
     return user
 }
 
-// Hash the plain text password before saving
+// pre => for doing something before an event like before validation or before saving.
+  // Hash the plain text password before saving......
 userSchema.pre('save', async function (next) {
     const user = this
-
+    // We only want to hash the password if it's been modified by the user
     if (user.isModified('password')) {
-        user.password = await bcrypt.hash(user.password, 8)
+        
+        user.password = await bcrypt.hash(user.password, 8)  // method from the bcrypt library accepting 2 arguments
+  // second argument in here is the number of rounds, which determines how many times the hashing algorithm is executed.
+    // 8 was the value recommended by the original creator of the algorithm.( maintains balance b/w security and speed)
+     // hashed password is the value that will end up storing in the database.
+        // hasing algorithms are by design not reversible
     }
 
-    next()
+    next()   // We simply call next when we're done 
 })
 
 //Delete user's task when user is removed
@@ -111,6 +126,7 @@ userSchema.pre('remove', async function (next) {
     next()
 })
 
+// Creating a variable to store user
 const User = mongoose.model('User', userSchema)
 
 User.init()
