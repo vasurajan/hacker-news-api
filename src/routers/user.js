@@ -11,6 +11,7 @@ router.post('/users', async (req, res) => {   //signup
 
     try {
         await user.save()    // to save the user
+        // sign up will also generate and return an authentication token.
        const token = await user.generateAuthToken()
         res.status(201).send({ user, token })   // shorthand syntax to define both properties.(user:user, token:token)
     } catch (e) {
@@ -32,8 +33,10 @@ router.post('/users/login', async (req,res) =>{        //login
 })
 
 router.post('/users/logout', auth, async (req,res) =>{
+    // There's no need to fetch user again because right here req.user is the user 
       try{
-          req.user.tokens = req.user.tokens.filter((token) =>{
+          // right here we're setting the tokens array equal to a filtered version of itself.
+          req.user.tokens = req.user.tokens.filter((token) =>{  //here we get access to the individual token.
               return token.token != req.token
           })
           await req.user.save()
@@ -45,9 +48,9 @@ router.post('/users/logout', auth, async (req,res) =>{
       }
 })
 
-router.post('/users/logoutAll', auth, async (req,res) =>{
+router.post('/users/logoutAll', auth, async (req,res) =>{  // logout from all sessions
     try{
-        req.user.tokens = []
+        req.user.tokens = []    // All we do is set req.user.tokens equal to an empty array.
         await req.user.save()
 
         res.send()
@@ -58,6 +61,8 @@ router.post('/users/logoutAll', auth, async (req,res) =>{
 })
 
 
+// This is going to allow someone to get their own profile when they're authenticated.
+  // and there's no need to provide the I.D. for our own user as the authentication token has that information embedded.
 router.get('/users/me', auth, async (req, res) => {
     
     res.send(req.user)

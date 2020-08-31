@@ -46,8 +46,9 @@ const userSchema = new mongoose.Schema({
             }
         }
     },
+    // Tracking tokens.....tokens is actually going to be an array of objects.
     tokens: [{
-        token: {
+        token: {         // each token in that tokens array will be an object with a single field called token 
             type: String,
             required: true
         }
@@ -62,11 +63,13 @@ userSchema.virtual('tasks', {
     foreignField: 'owner'
 })
 
+
+// It's gonna get called whenever the object gets stringify
 userSchema.methods.toJSON = function () {
     const user = this
     const userObject = user.toObject()
     //hiding private data
-    delete userObject.tokens
+    delete userObject.tokens   // Hiding from the object that we send back as the response.
     delete userObject.password
 
     return userObject
@@ -118,7 +121,7 @@ userSchema.pre('save', async function (next) {
     next()   // We simply call next when we're done 
 })
 
-//Delete user's task when user is removed
+// What we're doing is to create a middleware that deletes the tasks of the user, when that user is removed
 userSchema.pre('remove', async function (next) {
     const user = this
 

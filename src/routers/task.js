@@ -3,11 +3,16 @@ const Task = require('../models/task')
 const auth = require('../middleware/auth')
 const router = new express.Router()
 
+// The approach for user-news relationship is =>...
+   // the individual task should store the id of the user who created it 
+
 router.post('/tasks', auth, async (req, res) => {
     // const task = new Task(req.body)
+
+    // We want all of the stuff from req.body with the addition of an owner property.
     const task = new Task({
         ...req.body,   // this is going to copy all of the properties from body over to this object.
-        owner: req.user._id     //person we just authenticated
+        owner: req.user._id     //id of the person we just authenticated(req.user)
     })
 
     try {
